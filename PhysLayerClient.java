@@ -14,13 +14,15 @@ public class PhysLayerClient {
         try (Socket socket = new Socket("codebank.xyz", 38002)) {
 
             byte serverMassageArray[] = new byte[32];
-            byte ArrayOf5B [] = new byte [320];
+            byte ArrayOf5B [];
             int ServerByte = 0;
             float baseline = 0;
+            String receivedInfo = "";
+
             InputStream getIS = socket.getInputStream();
             OutputStream outStream = socket.getOutputStream();
 
-            // shows we are connected to the server
+            // Shows we are connected to the server
             System.out.println("Connected to server.");
 
             // Find the baseline
@@ -35,30 +37,29 @@ public class PhysLayerClient {
             // Every single byte we receive from a server means its a single bit
             for ( int i = 0 ; i < 320 ; i++){
                 ServerByte = getIS.read();
-                if (ServerByte <= baseline){
-                    ArrayOf5B[i] = 0;
+                if (ServerByte > baseline){
+                    receivedInfo += "1";
                 }else{
-                    ArrayOf5B[i] = 1;
+                    receivedInfo += "0";
                 }
             }
+            // decode the NRZI
+            ArrayOf5B = NRZI(receivedInfo);
 
             String toStringF = "",toStringS = "";
             int convertedTo4bF = 0, convertedTo4bS = 0;
-            int x = 10;
+            int counter = 10;
 
             // Separate every 5bit, convert it to 4bit, shift and add the upper and lower of a byte and save them in an array
             for ( int i = 0 ; i < 320 ;){
-                //System.out.println(ArrayOf5B[i]);
-                while (x != 0){
-                    if(x<=5){
-                        toStringF += ArrayOf5B[i++];
-                        //System.out.println("first " + toStringF);
+                while (counter != 0){
+                    if(counter<=5){
+                        toStringS += ArrayOf5B[i++];
                     }
                     else{
-                        toStringS += ArrayOf5B[i++];
-                        //System.out.println("second " + toStringS);
+                        toStringF += ArrayOf5B[i++];
                     }
-                    x--;
+                    counter--;
                 }
 
                 // Convert it to 4bit
@@ -70,7 +71,7 @@ public class PhysLayerClient {
                 serverMassageArray[(i/10)-1] = (byte)(convertedTo4bF+convertedTo4bS);
 
                 // reset
-                x=10;
+                counter=10;
                 toStringF = "";
                 toStringS = "";
             }
@@ -100,6 +101,35 @@ public class PhysLayerClient {
         }
 
         System.out.println("Disconnected from server.");
+    }
+
+    // Convert to corect Format of 5 bit values
+    private static byte[] NRZI(String string) {
+        byte corectedForm [] = new byte [320];
+
+        char prevValue = string.charAt(0);
+        char curValue = '0';
+
+        if (prevValue == '0'){
+            corectedForm[0] = 0;
+        }
+        else{
+            corectedForm[0] = 1;
+        }
+
+        for( int i = 1; i < 320; i++ ){
+            curValue = string.charAt(i);
+
+            if(curValue == prevValue){
+                corectedForm[i] = 0;
+            } else{
+                corectedForm[i] = 1;
+            }
+            prevValue = curValue;
+
+        }
+
+        return corectedForm;
     }
 
     // 5bit to 4bit converter
@@ -136,8 +166,8 @@ public class PhysLayerClient {
             return 14;
         else if(fiveBit.equals("11101"))
             return 15;
-        else
+        else{
             return -1;
+        }
     }
-
 }

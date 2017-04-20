@@ -43,7 +43,7 @@ public class PhysLayerClient {
                     receivedInfo += "0";
                 }
             }
-            // decode the NRZI
+            // Decode the NRZI
             ArrayOf5B = NRZI(receivedInfo);
 
             String toStringF = "",toStringS = "";
@@ -66,11 +66,11 @@ public class PhysLayerClient {
                 convertedTo4bF = ConvertTo4Bits(toStringF);
                 convertedTo4bS = ConvertTo4Bits(toStringS);
 
-                // shift and add the upper and lower of a byte and save them in an array
+                // Shift and add the upper and lower of a byte and save them in an array
                 convertedTo4bF = convertedTo4bF << 4;
                 serverMassageArray[(i/10)-1] = (byte)(convertedTo4bF+convertedTo4bS);
 
-                // reset
+                // Reset
                 counter=10;
                 toStringF = "";
                 toStringS = "";
@@ -88,7 +88,7 @@ public class PhysLayerClient {
                 outStream.write(serverMassageArray[i]);
             }
 
-            // check the result
+            // Check the result
             if(getIS.read() == 1) {
                 System.out.println("Response good.");
             } else {
